@@ -28,9 +28,9 @@ def inhomogenous_quadratic_form(x: np.ndarray, graph: nx.MultiDiGraph, vertex_li
             src = in_edge[0]
             if src in ind_dict.keys():
                 outvalue += (x[ind_dict[src]] - x[i])**(2.0) / 2.0      # half because internal edge is double counted
-            elif graph.nodes[src]["part"] < graph.nodes[vert]:
+            elif graph.nodes[src]["part"] < graph.nodes[vert]["part"]:
                 outvalue += (1.0 - x[i])**(2.0)
-            elif graph.nodes[src]["part"] > graph.nodes[vert]:
+            elif graph.nodes[src]["part"] > graph.nodes[vert]["part"]:
                 print("Parent has larger part")
             else:
                 print("Missing vertex of part in vertex list")
@@ -41,9 +41,9 @@ def inhomogenous_quadratic_form(x: np.ndarray, graph: nx.MultiDiGraph, vertex_li
             tgt = in_edge[1]
             if tgt in ind_dict.keys():
                 outvalue += (x[ind_dict[tgt]] - x[i])**(2.0) / 2.0      # half because internal edge is double counted
-            elif graph.nodes[tgt]["part"] > graph.nodes[vert]:
+            elif graph.nodes[tgt]["part"] > graph.nodes[vert]["part"]:
                 outvalue += (-1.0 - x[i])**(2.0)
-            elif graph.nodes[tgt]["part"] < graph.nodes[vert]:
+            elif graph.nodes[tgt]["part"] < graph.nodes[vert]["part"]:
                 print("Child has smaller part")
             else:
                 print("Missing vertex of part in vertex list")
@@ -83,9 +83,9 @@ def inhomogenous_quadratic_form_jac(x: np.ndarray, graph: nx.MultiDiGraph, verte
             src = in_edge[0]
             if src in ind_dict.keys():
                 outvalue[i] += 2.0 * (x[i] - x[ind_dict[src]])
-            elif graph.nodes[src]["part"] < graph.nodes[vert]:
+            elif graph.nodes[src]["part"] < graph.nodes[vert]["part"]:
                 outvalue[i] += 2.0 * (x[i] - 1.0)
-            elif graph.nodes[src]["part"] > graph.nodes[vert]:
+            elif graph.nodes[src]["part"] > graph.nodes[vert]["part"]:
                 print("Parent has larger part")
             else:
                 print("Missing vertex of part in vertex list")
@@ -96,9 +96,9 @@ def inhomogenous_quadratic_form_jac(x: np.ndarray, graph: nx.MultiDiGraph, verte
             tgt = in_edge[1]
             if tgt in ind_dict.keys():
                 outvalue[i] += 2.0 * (x[i] - x[ind_dict[tgt]])
-            elif graph.nodes[tgt]["part"] > graph.nodes[vert]:
+            elif graph.nodes[tgt]["part"] > graph.nodes[vert]["part"]:
                 outvalue[i] += 2.0 * (x[i] - (-1.0))
-            elif graph.nodes[tgt]["part"] < graph.nodes[vert]:
+            elif graph.nodes[tgt]["part"] < graph.nodes[vert]["part"]:
                 print("Child has smaller part")
             else:
                 print("Missing vertex of part in vertex list")
@@ -143,9 +143,9 @@ def inhomogenous_quadratic_form_hess(x: np.ndarray, graph: nx.MultiDiGraph, vert
                 outvalue[i][i] += 2.0
                 outvalue[i][ind_dict[src]] -= 2.0
                 outvalue[ind_dict[src]][i] -= 2.0
-            elif graph.nodes[src]["part"] < graph.nodes[vert]:
+            elif graph.nodes[src]["part"] < graph.nodes[vert]["part"]:
                 outvalue[i][i] += 2.0 * x[i]
-            elif graph.nodes[src]["part"] > graph.nodes[vert]:
+            elif graph.nodes[src]["part"] > graph.nodes[vert]["part"]:
                 print("Parent has larger part")
             else:
                 print("Missing vertex of part in vertex list")
@@ -156,9 +156,9 @@ def inhomogenous_quadratic_form_hess(x: np.ndarray, graph: nx.MultiDiGraph, vert
             tgt = in_edge[1]
             if tgt in ind_dict.keys():
                 outvalue[i][i] += 2.0
-            elif graph.nodes[tgt]["part"] > graph.nodes[vert]:
+            elif graph.nodes[tgt]["part"] > graph.nodes[vert]["part"]:
                 outvalue[i][i] += 2.0 * x[i]
-            elif graph.nodes[tgt]["part"] < graph.nodes[vert]:
+            elif graph.nodes[tgt]["part"] < graph.nodes[vert]["part"]:
                 print("Child has smaller part")
             else:
                 print("Missing vertex of part in vertex list")
@@ -236,7 +236,7 @@ def spectral_split(graph: nx.MultiDiGraph, vertex_list: list[None]) -> list[list
     
     return [earlier, later]
 
-def top_order_fix(graph: nx.MultiDiGraph, earlier: list[None], later: list[None]) -> list[None]:
+def top_order_fix(graph: nx.MultiDiGraph, earlier: list[None], later: list[None]) -> list[list[None], list[None]]:
     vertices = []
     vertices.extend(earlier)
     vertices.extend(later)
@@ -259,12 +259,12 @@ def top_order_fix(graph: nx.MultiDiGraph, earlier: list[None], later: list[None]
         for edge in graph.out_edges(vert):
             src = edge[0] # =vert
             tgt = edge[1]
-            if graph.nodes[src]['part'] == graph.nodes[tgt]["part"]:
+            if graph.nodes[src]["part"] == graph.nodes[tgt]["part"]:
                 if (ind < num_e) and (ind_dict[tgt] >= num_e):
                     priority[ind][1] += 1
                 if (ind >= num_e) and (ind_dict[tgt] < num_e):
                     priority[ind][1] -= 1
-            elif graph.nodes[src]['part'] < graph.nodes[tgt]["part"]:
+            elif graph.nodes[src]["part"] < graph.nodes[tgt]["part"]:
                 priority[ind][1] += 1
             else:
                 print("Topological order violated")
@@ -272,12 +272,12 @@ def top_order_fix(graph: nx.MultiDiGraph, earlier: list[None], later: list[None]
         for edge in graph.in_edges(vert):
             src = edge[0]
             tgt = edge[1] # =vert
-            if graph.nodes[src]['part'] == graph.nodes[tgt]["part"]:
+            if graph.nodes[src]["part"] == graph.nodes[tgt]["part"]:
                 if (ind < num_e) and (ind_dict[src] >= num_e):
                     priority[ind][1] += 1
                 if (ind >= num_e) and (ind_dict[src] < num_e):
                     priority[ind][1] -= 1
-            elif graph.nodes[src]['part'] < graph.nodes[tgt]["part"]:
+            elif graph.nodes[src]["part"] < graph.nodes[tgt]["part"]:
                 priority[ind][1] -= 1
             else:
                 print("Topological order violated")
@@ -301,36 +301,103 @@ def top_order_fix(graph: nx.MultiDiGraph, earlier: list[None], later: list[None]
             if remaining_parents[index] == 0:
                 heapq.heappush(queue, priority[index])
     
-    return top_ord
+    return [top_ord[:num_e], top_ord[num_e:]]
+
+def part_requiring_recursion(graph: nx.MultiDiGraph) -> str:
+    parts_set = set()
+    
+    for vert in graph.nodes:
+        part = graph.nodes[vert]["part"]
+        if part in parts_set:
+            return part
+        else:
+            parts_set.add(part)
+    
+    return ""
 
 def spec_top_order(graph: nx.MultiDiGraph) -> list[str]:
     if (not nx.is_directed_acyclic_graph(graph)):
         print("Graph is not acyclic")
         return []
     
-    nx.set_node_attributes(graph, 0, "part")
-    nx.set_node_attributes(graph, 0, "part_new")
+    nx.set_node_attributes(graph, "", "part")
     
     # first iteration
     earlier, later = spectral_split(graph, list(graph.nodes))
     e_set = set(earlier)
     l_set = set(later)
     
+    # Swapping should be needed only for first iteration
     edge_diff = 0
     for edge in graph.edges:
         if (edge[0] in e_set) and (edge[1] in l_set):
             edge_diff += 1
         if (edge[0] in l_set) and (edge[1] in e_set):
             edge_diff -= 1
-            
+    
     if (edge_diff < 0):
         earlier, later = later, earlier
         
-    top_order_fix(graph, earlier, later)
-        
-
+    earlier, later = top_order_fix(graph, earlier, later)
     
-    return []
+    for vert in earlier:
+        graph.nodes[vert]["part"] = graph.nodes[vert]["part"] + "0"
+        
+    for vert in later:
+        graph.nodes[vert]["part"] = graph.nodes[vert]["part"] + "1"
+    
+    # Recursive iterations
+    processing_part = part_requiring_recursion(graph)
+    while (processing_part != ""):
+        vertices_of_part = [vert for vert in graph.nodes if graph.nodes[vert]["part"] == processing_part ]
+        assert(len(vertices_of_part) > 0)
+        
+        earlier, later = spectral_split(graph, vertices_of_part)
+        earlier, later = top_order_fix(graph, earlier, later)
+    
+        for vert in earlier:
+            graph.nodes[vert]["part"] = graph.nodes[vert]["part"] + "0"
+            
+        for vert in later:
+            graph.nodes[vert]["part"] = graph.nodes[vert]["part"] + "1"
+        
+        processing_part = part_requiring_recursion(graph)
+
+    # Generate Topological order from parts
+    vert_and_parts = [[graph.nodes[vert]["part"], vert] for vert in graph.nodes]
+    vert_and_parts.sort()
+    
+    return [ item[1] for item in vert_and_parts ]
+
+def spec_top_order_whole(graph: nx.MultiDiGraph) -> list[str]:
+    weak_comp = nx.weakly_connected_components(graph)
+    
+    top_order = []
+    
+    for comp in weak_comp:
+        subgraph = nx.induced_subgraph(graph, comp)
+        subgraph = subgraph.copy()
+        top_order.extend( spec_top_order(subgraph) )
+        
+    return top_order
+
+def check_valid_top_order(graph: nx.MultiDiGraph, top_order: list[None]) -> bool:
+    if (len(graph.nodes) != len(top_order)):
+        return False
+    
+    index_of_vert = dict()
+    for ind, vert in enumerate(top_order):
+        index_of_vert[vert] = ind
+        
+    for vert in graph.nodes:
+        if not vert in index_of_vert.keys():
+            return False
+        
+    for edge in graph.edges:
+        if (index_of_vert[edge[0]] > index_of_vert[edge[1]]):
+            return False
+    
+    return True
 
 def main():
     if (len(sys.argv) < 2):
@@ -340,19 +407,13 @@ def main():
     graph_file = sys.argv[1]
     graph = nx.nx_pydot.read_dot(graph_file)
     
-    weak_comp = nx.weakly_connected_components(graph)
+    top_order = spec_top_order_whole(graph)
     
-    top_order = []
-    
-    for comp in weak_comp:
-        subgraph = nx.induced_subgraph(graph, comp)
-        subgraph = subgraph.copy()
-        top_order.extend( spec_top_order(subgraph) )
-    
-    if (len(top_order) != graph.number_of_nodes()):
+    if (not check_valid_top_order(graph, top_order)):
+        print("Invalid Topological order!")
         return 1
     
-    
+    print(top_order)
 
     return 0
 
