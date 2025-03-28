@@ -424,13 +424,15 @@ def main():
         return 1
         
     graph_file = sys.argv[1]
+    graph_name = graph_file[graph_file.rfind("/") + 1: graph_file.rfind(".")]
+    
     graph = None
     if (graph_file[-3:] == "dot"):
         graph = nx.nx_pydot.read_dot(graph_file)
         if (not nx.is_directed_acyclic_graph(graph)):
             print("Graph is not acyclic")
             return 1
-        plt.figure("Original Graph")
+        plt.figure("Original Graph: " + graph_name)
         plt.spy(nx.to_numpy_array(graph, list(nx.topological_sort(graph))))
         
     elif (graph_file[-3:] == "mtx"):
@@ -440,8 +442,8 @@ def main():
         matrix = scipy.sparse.triu(matrix, k=1)
         graph = nx_graph_from_upper_triangular_matrix(matrix.toarray())
         
-        plt.figure("Original Graph")
-        plt.spy(matrix)
+        plt.figure("Original Graph: " + graph_name)
+        plt.spy(matrix.toarray())
     else:
         print("Unknown file format!")
         return 1
@@ -454,7 +456,7 @@ def main():
     
     print(top_order)
     
-    plt.figure("Reordered Graph")
+    plt.figure("Reordered Graph: " + graph_name)
     plt.spy(nx.to_numpy_array(graph, top_order))
     plt.show()
 
