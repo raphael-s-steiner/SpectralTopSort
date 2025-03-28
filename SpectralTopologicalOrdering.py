@@ -9,6 +9,7 @@ import scipy
 import sys
 
 import scipy.optimize
+import scipy.sparse
 
 def direction_incentive_constant():
     return 0.5
@@ -399,13 +400,51 @@ def check_valid_top_order(graph: nx.MultiDiGraph, top_order: list[None]) -> bool
     
     return True
 
+def nx_graph_from_upper_triangular_matrix(mat: list[list]) -> nx.MultiDiGraph:
+    assert(len(mat) == len(mat[0]))
+    mat_size = len(mat)
+    
+    graph = nx.MultiDiGraph()
+    
+    for i in range(mat_size):
+        graph.add_node(i)
+        
+    for i in range(mat_size):
+        for j in range(i+1, mat_size):
+            if (abs(mat[i][j]) > 0.0):
+                graph.add_edge(i,j)
+    
+    return graph
+
 def main():
     if (len(sys.argv) < 2):
         print("Usage: " + sys.argv[0] + " <graph.dot>")
+        print("Usage: " + sys.argv[0] + " <graph.mtx>" + " (optional --low)")
+        print("\nOnly the strictly upper triangular part of an mtx matrix is taken. If the flag \"--low\" is passed then only the strictly lower triangular part is taken.")
         return 1
         
     graph_file = sys.argv[1]
-    graph = nx.nx_pydot.read_dot(graph_file)
+    graph = None
+    if (graph_file[-3:] == "dot"):
+        graph = nx.nx_pydot.read_dot(graph_file)
+        if (not nx.is_directed_acyclic_graph(graph)):
+            print("Graph is not acyclic")
+            return 1
+        plt.figure("Original Graph")
+        plt.spy(nx.to_numpy_array(graph, list(nx.topological_sort(graph))))
+        
+    elif (graph_file[-3:] == "mtx"):
+        matrix = scipy.io.mmread(graph_file, spmatrix=True)
+        if (len(sys.argv) == 3) and (sys.argv[2] == "--low"):
+            matrix = matrix.transpose()
+        matrix = scipy.sparse.triu(matrix, k=1)
+        graph = nx_graph_from_upper_triangular_matrix(matrix.toarray())
+        
+        plt.figure("Original Graph")
+        plt.spy(matrix)
+    else:
+        print("Unknown file format!")
+        return 1
     
     top_order = spec_top_order_whole(graph)
     
@@ -414,6 +453,10 @@ def main():
         return 1
     
     print(top_order)
+    
+    plt.figure("Reordered Graph")
+    plt.spy(nx.to_numpy_array(graph, top_order))
+    plt.show()
 
     return 0
 
